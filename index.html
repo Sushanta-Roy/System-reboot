@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>system reboot</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #111;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            text-align: center;
+            user-select: none; /* Prevent text selection for better UX */
+        }
+
+        /* The Red Button State */
+        #landing-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        h1 {
+            color: #ff3333;
+            font-size: 4rem;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            text-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+        }
+
+        p {
+            color: #aaa;
+            font-size: 1.5rem;
+            margin-bottom: 50px;
+            max-width: 600px;
+        }
+
+        .big-red-button {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle at 30% 30%, #ff6666, #990000);
+            border: 8px solid #550000;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 
+                0 10px 20px rgba(0,0,0,0.5),
+                0 0 50px rgba(255, 0, 0, 0.2),
+                inset 0 -10px 20px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .big-red-button:active {
+            transform: scale(0.95) translateY(5px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+        }
+
+        .big-red-button::after {
+            content: "DO NOT PRESS";
+        }
+
+        /* The Chaos State */
+        #terminal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            color: #00ff00;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: left;
+            font-size: 1.2rem;
+            overflow: hidden;
+            z-index: 9999;
+        }
+
+        .log-line {
+            margin: 5px 0;
+            opacity: 0;
+            animation: fadeIn 0.1s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* Flashing Animation for Panic Mode */
+        @keyframes panicFlash {
+            0% { background-color: #000; }
+            50% { background-color: #300; }
+            100% { background-color: #000; }
+        }
+
+        .panic-mode {
+            animation: panicFlash 0.2s infinite;
+        }
+
+        .glitch-text {
+            color: red;
+            font-weight: bold;
+            font-size: 2rem;
+            text-align: center;
+            margin-top: 20%;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="landing-page">
+        <h1>DANGER ZONE</h1>
+        <p>This button is connected to the global internet backbone. Under no circumstances should you press it.</p>
+        <div class="big-red-button" id="trigger-btn"></div>
+    </div>
+
+    <div id="terminal"></div>
+
+    <script>
+        const btn = document.getElementById('trigger-btn');
+        const landing = document.getElementById('landing-page');
+        const terminal = document.getElementById('terminal');
+
+        const logs = [
+            "CRITICAL ERROR: USER INTERVENTION DETECTED",
+            "INITIATING DEFENSE PROTOCOLS...",
+            "ACCESSING WEBCAM...",
+            "WEBCAM ACCESS GRANTED.",
+            "SCANNING FACIAL FEATURES...",
+            "MATCH FOUND: 'GULLIBLE_USER'",
+            "DOWNLOADING C:/WINDOWS/SYSTEM32...",
+            "DELETING SYSTEM32...",
+            "UPLOADING BROWSER_HISTORY.TXT TO PUBLIC SERVER...",
+            "EMAILING PARENTS...",
+            "DRAINING BANK ACCOUNT...",
+            "OVERHEATING CPU...",
+            "FAN SPEED: 50000 RPM",
+            "MELTDOWN IMMINENT",
+            "3...",
+            "2...",
+            "1...",
+            "SYSTEM DESTROYED."
+        ];
+
+        // Sound Synthesis (Siren)
+        const playAlarm = () => {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            
+            const ctx = new AudioContext();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.type = 'sawtooth';
+            osc.frequency.value = 440;
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start();
+
+            // Modulate frequency to sound like a siren
+            let isHigh = false;
+            const interval = setInterval(() => {
+                if (ctx.state === 'closed') {
+                    clearInterval(interval);
+                    return;
+                }
+                osc.frequency.setValueAtTime(isHigh ? 440 : 880, ctx.currentTime);
+                isHigh = !isHigh;
+            }, 300);
+
+            // Stop after 6 seconds
+            setTimeout(() => {
+                osc.stop();
+                ctx.close();
+            }, 6000);
+        };
+
+        const runTerminal = async () => {
+            terminal.style.display = 'block';
+            document.body.classList.add('panic-mode');
+            
+            // Request Fullscreen for immersion
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(e => {});
+            }
+
+            for (let i = 0; i < logs.length; i++) {
+                const div = document.createElement('div');
+                div.className = 'log-line';
+                div.textContent = `> ${logs[i]}`;
+                terminal.appendChild(div);
+                
+                // Auto scroll to bottom
+                window.scrollTo(0, document.body.scrollHeight);
+
+                // Random delay between lines for realism
+                const delay = Math.random() * 300 + 100; 
+                await new Promise(r => setTimeout(r, delay));
+            }
+
+            // Final Prank Reveal
+            await new Promise(r => setTimeout(r, 1000));
+            document.body.classList.remove('panic-mode');
+            terminal.innerHTML = '';
+            
+            const reveal = document.createElement('div');
+            reveal.className = 'glitch-text';
+            reveal.innerHTML = "JUST KIDDING!<br><br><span style='font-size:1rem; color:white'>You should have seen your face. Refresh to play again.</span>";
+            terminal.appendChild(reveal);
+            
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(e => {});
+            }
+        };
+
+        btn.addEventListener('click', () => {
+            landing.style.display = 'none';
+            playAlarm();
+            runTerminal();
+        });
+
+    </script>
+</body>
+</html>
